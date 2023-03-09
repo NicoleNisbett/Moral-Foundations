@@ -1,0 +1,484 @@
+---
+title: "MoralFoundationsSurvey2"
+output: 
+  html_document:
+    toc: true
+date: "2023-02-20"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Prepare the data
+
+Load separate files for the positive and negative responses
+
+```{r data loading, message = FALSE}
+library(readr)
+
+url_neg = "https://raw.githubusercontent.com/NicoleNisbett/Moral-Foundations/main/NEG_coded.csv"
+neg_data <- read_csv(url(url_neg))
+
+url_pos = "https://raw.githubusercontent.com/NicoleNisbett/Moral-Foundations/main/POS_coded.csv"
+pos_data <- read_csv(url(url_pos))
+```
+
+Create the value scales based on TwIVI
+```{r}
+
+create_scales = function(file){
+  data = file
+  
+  #creating openness to change scales
+  subset1 <- data.frame(data$Q3_3,data$Q5_4,data$Q5_3,data$Q4_7)
+  data$conformity_val <- rowMeans(subset1)
+#Schwartz_5 Schwartz_6 Schwartz_15 Schwartz_16
+  subset2 <- data.frame(data$Q5_5,data$Q5_2,data$Q3_4,data$Q4_3)
+  data$self_direction_val <- rowMeans(subset2)
+  data$SCH_Conservation <- data$conformity_val - data$self_direction_val
+  
+  #creating Self-enhancement/Self-trancendencies scales
+  subset3 <- data.frame(data$Q3_2,data$Q3_7,data$Q4_4,data$Q5_6)
+  data$universalism_val <- rowMeans(subset3)
+  #
+  subset4 <- data.frame(data$Q3_6,data$Q4_2,data$Q4_5,data$Q5_1)
+  data$achievement_val <- rowMeans(subset4)
+  data$SCH_SelfTrancendence <- data$universalism_val - data$achievement_val
+  
+  return(data)
+}
+
+negative = create_scales(neg_data)
+negative$sentiment = "negative"
+
+positive = create_scales(pos_data)
+positive$sentiment = "positive"
+
+
+```
+
+## Descriptive Analysis
+
+Rename some of the questions for ease and combine them
+```{r}
+names(positive)[names(positive) == "Q17"] <- "Income"
+names(negative)[names(negative) == "Q17"] <- "Income"
+
+names(positive)[names(positive) == "Q13"] <- "Age"
+names(negative)[names(negative) == "Q13"] <- "Age"
+
+names(positive)[names(positive) == "Q19_1"] <- "Political_Leaning"
+names(negative)[names(negative) == "Q19_1"] <- "Political_Leaning"
+
+combined = rbind(negative, positive)
+```
+
+Plot the distiribution for income
+```{r}
+library(ggplot2)
+ggplot(combined, aes(x = Income))+ geom_bar() +scale_x_discrete(name = "Annual Household Income (in £1000s)", limits = c("<20", "20 - 40", "40 - 60", "60 - 80", "80 - 100", ">100"))
+```
+
+Distribution of educational background
+```{r}
+ggplot(combined, aes(x = Q15))+ geom_bar() + scale_x_discrete(name = "Highest Qualification", limits = c("No formal", "GCSE", "A-level", "Vocational", "Bachelors", "Masters", "Doctoral")) 
+
+```
+
+
+## Confirmatory Factor Analysis (CFA)
+```{r message=FALSE, warning=FALSE}
+library(lavaan)
+set.seed(56789)
+```
+
+Get just the negative questions
+```{r}
+QsN= data.frame(negative$Q6_1_a, negative$Q6_2_a,negative$Q6_3_a,negative$Q6_4_a, negative$Q6_5_a,negative$Q6_6_a, negative$Q7_1_a, negative$Q7_2_a, negative$Q7_3_a, negative$Q7_4_a, negative$Q7_5_a, negative$Q7_6_a , negative$Q8_1_a, negative$Q8_2_a, negative$Q8_3_a, negative$Q8_4_a, negative$Q8_5_a, negative$Q8_6_a) 
+
+names(QsN) = c("comp1", "comp2", "comp3", "fair1", "fair2", "fair3", "pur1", "pur2", "pur3", "auth1", "auth2", "auth3", "loy1", "loy2", "loy3", "anc1", "anc2", "anc3")
+
+```
+
+Create the model for the CFA based on all statements and run the model
+
+```{r}
+items = '
+compassion =~ comp1 + comp2 + comp3
+fairness =~ fair1 + fair2 + fair3
+purity =~ pur1 + pur2 + pur3
+authority =~ auth1 + auth2 + auth3
+loyalty =~ loy1 + loy2 + loy3 
+ancestors =~ anc1 + anc2 + anc3
+'
+#decent model but can be improved
+cfa_modN = cfa(items, data = QsN)
+summary(cfa_modN, standardized = TRUE, fit.measures=TRUE) 
+
+```
+
+Pur1 and Loy1 have low loading so remove them and re-run the model
+
+```{r}
+itemsN = '
+compassion =~ comp1 + comp2 + comp3
+fairness =~ fair2 + fair3
+purity =~ pur2 + pur3
+authority =~ auth1 + auth2 + auth3
+loyalty =~ loy1 + loy2 + loy3 
+ancestors =~ anc1 + anc2 + anc3
+'
+#much better
+cfa_modN2 = cfa(itemsN, data = QsN)
+summary(cfa_modN2, standardized = TRUE, fit.measures=TRUE)
+```
+
+Even better model now those statements have been removed so we can create the indices.
+
+```{r}
+get_neg_morals = function(negative){
+  negative$compassion = rowMeans(data.frame(negative$Q6_1_a, negative$Q6_2_a,negative$Q6_3_a), na.rm = TRUE)
+
+  negative$fairness = rowMeans(data.frame(negative$Q6_5_a,negative$Q6_6_a), na.rm = TRUE)
+
+  negative$purity = rowMeans(data.frame(negative$Q7_2_a, negative$Q7_3_a), na.rm = TRUE)
+
+  negative$authority = rowMeans(data.frame(negative$Q7_4_a, negative$Q7_5_a, negative$Q7_6_a), na.rm = TRUE)
+
+  negative$loyalty = rowMeans(data.frame(negative$Q8_1_a, negative$Q8_2_a, negative$Q8_3_a), na.rm = TRUE)
+
+  negative$ancestors = rowMeans(data.frame(negative$Q8_4_a, negative$Q8_5_a, negative$Q8_6_a), na.rm = TRUE)
+
+  return(negative)
+}
+
+negative = get_neg_morals(negative)
+
+```
+
+
+Now repeat the process for positive statements
+```{r}
+QsP= data.frame(positive$Q6_1_a, positive$Q6_2_a,positive$Q6_3_a,positive$Q6_4_a, positive$Q6_5_a,positive$Q6_6_a, positive$Q7_1_a, positive$Q7_2_a, positive$Q7_3_a, positive$Q7_4_a, positive$Q7_5_a, positive$Q7_6_a , positive$Q8_1_a, positive$Q8_2_a, positive$Q8_3_a, positive$Q8_4_a, positive$Q8_5_a, positive$Q8_6_a)
+
+names(QsP) = c("comp1", "comp2", "comp3", "fair1", "fair2", "fair3", "pur1", "pur2", "pur3", "auth1", "auth2", "auth3", "loy1", "loy2", "loy3", "anc1", "anc2", "anc3")
+
+items = '
+compassion =~ comp1 + comp2 + comp3
+fairness =~ fair1 + fair2 + fair3
+purity =~ pur1 + pur2 + pur3
+authority =~ auth1 + auth2 + auth3
+loyalty =~ loy1 + loy2 + loy3 
+ancestors =~ anc1 + anc2 + anc3
+'
+
+#pretty bad model but can also be improved
+cfa_modP = cfa(items, data = QsP)
+summary(cfa_modP, standardized = TRUE, fit.measures=TRUE) 
+
+```
+
+Remove the statements with low loadings and run again
+
+```{r}
+#remove comp1, pur2, loy1, fair3
+itemsP = '
+compassion =~ comp2 + comp3
+fairness =~ fair1 + fair2 
+purity =~ pur1 + pur3
+authority =~ auth1 + auth2 + auth3
+loyalty =~ loy2 + loy3 
+ancestors =~ anc1 + anc2 + anc3
+'
+#a bit better but still under the thresholds
+cfa_modP2 = cfa(itemsP, data = QsP)
+summary(cfa_modP2, standardized = TRUE, fit.measures=TRUE) 
+```
+The positive model is still under the recommended thresholds so these indices do not work for the positive statements. Instead of indices we'll just use the most convincing statement from each moral category. 
+
+```{r}
+names(positive)[names(positive) == "Q6_2_a"] <- "CP2"
+names(positive)[names(positive) == "Q6_5_a"] <- "FP2"
+names(positive)[names(positive) == "Q7_3_a"] <- "PP3"
+names(positive)[names(positive) == "Q7_6_a"] <- "AP3"
+names(positive)[names(positive) == "Q8_1_a"] <- "LP1"
+names(positive)[names(positive) == "Q8_6_a"] <- "GAP3"
+```
+
+## Measuring convincincness ratings
+
+Most convincing among the negative indices
+
+```{r warning=FALSE}
+library(reshape2)
+library(ggplot2)
+neg_melt = melt(negative, measure.vars = c("compassion", "fairness", "purity", "authority", "loyalty", "ancestors"), na.rm=TRUE)
+ggplot(neg_melt, aes(x = variable, y = value)) + geom_boxplot() + ggtitle("Negative Statements, Indices") + xlab("Moral Category") + ylab("Convincing") + scale_y_continuous(breaks = c(1,2,3,4,5,6))
+```
+
+And the same for mot convincing positive statements
+```{r warning=FALSE}
+pos_melt = melt(positive, measure.vars = c("CP2", "FP2", "PP3", "AP3", "LP1", "GAP3"), na.rm=TRUE)
+ggplot(pos_melt, aes(x = variable, y = value)) + 
+  geom_boxplot() +stat_summary(fun.y=mean, geom="point", shape=20, size=5, color="red", fill="red") + 
+  ggtitle("Positive Statements, Single") + xlab("Moral Category") + ylab("Convincing") + 
+  scale_y_continuous(breaks = c(1,2,3,4,5,6))
+```
+
+Recode the applicability and novelty questions so they are 0 and 1.
+
+```{r}
+applicableN = data.frame(negative$Q6_1_b, negative$Q6_2_b,negative$Q6_3_b,negative$Q6_4_b, negative$Q6_5_b,negative$Q6_6_b, negative$Q7_1_b, negative$Q7_2_b, negative$Q7_3_b, negative$Q7_4_b, negative$Q7_5_b, negative$Q7_6_b , negative$Q8_1_b, negative$Q8_2_b, negative$Q8_3_b, negative$Q8_4_b, negative$Q8_5_b, negative$Q8_6_b)
+applicableN[applicableN == 2] <- 0 #not applicable
+applicableN[applicableN == 1] <- 1 #applicable
+
+
+applicableP = data.frame(positive$Q6_1_b, positive$Q6_2_b,positive$Q6_3_b,positive$Q6_4_b, positive$Q6_5_b,positive$Q6_6_b, positive$Q7_1_b, positive$Q7_2_b, positive$Q7_3_b, positive$Q7_4_b, positive$Q7_5_b, positive$Q7_6_b , positive$Q8_1_b, positive$Q8_2_b, positive$Q8_3_b, positive$Q8_4_b, positive$Q8_5_b, positive$Q8_6_b)
+applicableP[applicableP == 2] <- 0 #not applicable
+applicableP[applicableP == 1] <- 1 #applicable
+
+
+##Novel (closer to 2 = more novel)
+novelsN = negative[, 66:85]
+novelsN = novelsN[, -c(7,14)]
+
+novelsN[novelsN == 1] <- 0 #not novel
+novelsN[novelsN == 2] <- 1 #novel
+novelsN = data.frame(novelsN)
+
+
+novelsP = positive[ , 66:85]
+novelsP = novelsP[ , -c(7,14)]
+
+novelsP[novelsP == 1] <- 0 #not novel
+novelsP[novelsP == 2] <- 1 #novel
+```
+
+
+## Correlations
+
+Calculate correlations between convincingness ratings and applicability, and convincingness ratings and novelty
+
+```{r}
+pBiserialcorrs = function(x,y){
+  corlist = list()
+  for(i in 1:18){
+    check = cor.test(as.numeric(unlist(x[,i])), y[,i], alternative = "t")
+    
+    corlist = append(corlist, c(check$statistic, round(check$p.value, 4),round(check$estimate, 2)))
+  }
+  
+  corframe = data.frame(matrix(unlist(corlist), nrow = 18, byrow = TRUE))
+  colnames(corframe) = c("t-statistic", "p-value", "correlation")
+  corframe$statement = colnames(y)
+  return(corframe)
+}
+```
+
+Convincingness and novelty
+```{r}
+#
+novelsQsN = pBiserialcorrs(novelsN, QsN)
+summary(novelsQsN$correlation)
+
+novelsQsP = pBiserialcorrs(novelsP, QsP)
+summary(novelsQsP$correlation)
+
+```
+
+Convincingness and applicability
+```{r}
+applicableQsN = pBiserialcorrs(applicableN, QsN)
+summary(applicableQsN$correlation)
+
+applicableQsP = pBiserialcorrs(applicableP, QsP)
+summary(applicableQsP$correlation)
+
+```
+
+
+Novelty and applicability
+
+
+```{r}
+corrs = function(x,y){
+  corlist = list()
+  for(i in 1:18){
+    check = cor(x[i], y[i], use = "complete.obs")
+    
+    corlist = append(corlist, round(check[1], 2))
+  }
+  
+  corframe = data.frame(matrix(unlist(corlist), nrow = 18, byrow = TRUE))
+  colnames(corframe) = c("correlation")
+  corframe$statement = c("comp1", "comp2", "comp3", "fair1", "fair2", "fair3", "pur1", "pur2", "pur3", "auth1", "auth2", "auth3", "loy1", "loy2", "loy3", "anc1", "anc2", "anc3")
+  return(corframe)
+}
+```
+
+```{r}
+applicableNovelsN = corrs(applicableN, novelsN)
+summary(applicableNovelsN$correlation)
+
+applicableNovelsP = corrs(applicableP, novelsP)
+summary(applicableNovelsP$correlation)
+
+```
+
+
+Calculate correlations between values and morals
+```{r message=FALSE, fig.width = 10}
+library(psych)
+library(corrplot)
+
+correlations_neg = cor(negative[, c("SCH_Conservation","conformity_val", "self_direction_val", "SCH_SelfTrancendence", "universalism_val", "achievement_val", "Political_Leaning", "compassion", "fairness", "purity", "authority", "loyalty", "ancestors", "Income", "Age" )], use = "complete.obs")
+
+corrplot(round(correlations_neg, 2), type = "upper",order = "original", 
+         tl.col = "black", tl.srt = 45, method = "number", diag = FALSE, number.cex = 0.8, tl.cex = 0.9, cl.cex = 0.8)
+
+```
+
+Repeat for positive statements
+
+```{r, fig.width = 10}
+correlations_pos = cor(positive[, c("SCH_Conservation","conformity_val", "self_direction_val", "SCH_SelfTrancendence", "universalism_val", "achievement_val", "Political_Leaning", "CP2", "FP2", "PP3", "AP3", "LP1", "GAP3", "Income", "Age" )], use = "complete.obs")
+
+corrplot(round(correlations_pos, 2), type = "upper",order = "original", 
+         tl.col = "black", tl.srt = 45, method = "number", diag = FALSE, number.cex = 0.8, tl.cex = 0.9, cl.cex = 0.8)
+
+```
+
+
+## T-tests
+
+Calculate t-tests to compare how different groups were convinced by statements
+
+
+Political leaning
+```{r message=FALSE}
+library(dplyr)
+negative = negative %>% 
+  mutate(politics = case_when(Political_Leaning < 5 ~ "Left", Political_Leaning >= 5 ~ "Right") )
+
+table(negative$politics)
+
+leftN = subset(negative, politics == "Left")
+rightN = subset(negative, politics == "Right")    
+
+t.test(leftN$compassion, rightN$compassion, var.equal = FALSE)
+t.test(leftN$fairness, rightN$fairness, var.equal = FALSE)
+t.test(leftN$purity, rightN$purity, var.equal = FALSE)
+t.test(leftN$authority, rightN$authority, var.equal = FALSE)
+t.test(leftN$loyalty, rightN$loyalty, var.equal = FALSE)
+t.test(leftN$ancestors, rightN$ancestors, var.equal = FALSE)
+```
+
+Signifiant p-values so can visualise in a boxplot
+```{r}
+neg_melt = melt(negative, measure.vars = c("compassion", "fairness", "purity", "authority", "loyalty", "ancestors"), na.rm=TRUE)
+
+#Which political leaning of participants are more convinced?
+ggplot(neg_melt, aes(x = variable, y = value, fill = politics)) + geom_boxplot() + xlab("Moral Category") + ylab("Convincing") + scale_y_continuous(breaks = c(1,2,3,4,5,6))
+
+```
+
+Repeat for positive statements but they are all insignificant
+```{r}
+positive = positive %>% 
+  mutate(politics = case_when(Political_Leaning < 5 ~ "Left", Political_Leaning >= 5 ~ "Right") )
+
+pos_melt = melt(positive, measure.vars = c("CP2", "FP2", "PP3", "AP3", "LP1", "GAP3"), na.rm=TRUE)
+
+#Which political leaning of participants are more convinced?
+ggplot(pos_melt, aes(x = variable, y = value, fill = politics)) + geom_boxplot() + xlab("Moral Category") + ylab("Convincing") + scale_y_continuous(breaks = c(1,2,3,4,5,6))
+
+
+table(positive$politics)
+
+leftP = subset(positive, politics == "Left")
+rightP = subset(positive, politics == "Right")    
+
+#insignificant
+t.test(leftP$CP2, rightP$CP2, var.equal = FALSE)
+t.test(leftP$FP2, rightP$FP2, var.equal = FALSE)
+t.test(leftP$PP3, rightP$PP3, var.equal = FALSE)
+t.test(leftP$AP3, rightP$AP3, var.equal = FALSE)
+t.test(leftP$LP1, rightP$LP1, var.equal = FALSE)
+t.test(leftP$GAP3, rightP$GAP3, var.equal = FALSE)
+
+```
+
+Academic background
+
+```{r}
+#negative
+negative = negative %>% 
+  mutate(academics = case_when(Q15 < 5 ~ "non-academic", Q15 >= 5 ~ "academic") )
+
+table(negative$academics)
+
+aca = subset(negative, academics == "academic")
+nonaca = subset(negative, academics == "non-academic")   
+
+#non signif
+t.test(aca$compassion, nonaca$compassion, var.equal = FALSE)
+t.test(aca$fairness, nonaca$fairness, var.equal = FALSE)
+t.test(aca$purity, nonaca$purity, var.equal = FALSE)
+t.test(aca$authority, nonaca$authority, var.equal = FALSE)
+t.test(aca$loyalty, nonaca$loyalty, var.equal = FALSE)
+t.test(aca$ancestors, nonaca$ancestors, var.equal = FALSE)
+
+```
+
+
+```{r}
+#positive
+positive = positive %>% 
+  mutate(academics = case_when(Q15 < 5 ~ "non-academic", Q15 >= 5 ~ "academic") )
+
+table(positive$academics)
+
+acaP = subset(positive, academics == "academic")
+nonacaP = subset(positive, academics == "non-academic")   
+#insignificant
+t.test(acaP$CP2, nonacaP$CP2, var.equal = FALSE)
+t.test(acaP$FP2, nonacaP$FP2, var.equal = FALSE)
+t.test(acaP$PP3, nonacaP$PP3, var.equal = FALSE)
+t.test(acaP$AP3, nonacaP$AP3, var.equal = FALSE)
+t.test(acaP$LP1, nonacaP$LP1, var.equal = FALSE)
+t.test(acaP$GAP3, nonacaP$GAP3, var.equal = FALSE)
+```
+
+
+Religion
+
+Just perform t-test for the religiously-framed statements
+```{r}
+negative = negative %>% 
+  mutate(religion = case_when(Q18 < 9 ~ "religious", Q18 == 9 ~ "non-religious") )
+
+table(negative$religion)
+
+relig = subset(negative, religion == "religious")
+nonrelig = subset(negative, religion == "non-religious")   
+#religious statement
+t.test(relig$Q7_1_a, nonrelig$Q7_1_a, var.equal = FALSE)
+```
+
+And repeat for positive
+
+```{r}
+#positive
+positive = positive %>% 
+  mutate(religion = case_when(Q18 < 9 ~ "religious", Q18 == 9 ~ "non-religious") )
+
+table(positive$religion)
+
+religP = subset(positive, religion == "religious")
+nonreligP = subset(positive, religion == "non-religious") 
+
+#religious statement
+t.test(religP$Q7_2_a, nonreligP$Q7_2_a, var.equal = FALSE)
+```
+
