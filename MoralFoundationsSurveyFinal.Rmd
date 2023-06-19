@@ -86,6 +86,18 @@ ggplot(combined, aes(x = Q15))+ geom_bar() + scale_x_discrete(name = "Highest Qu
 
 ```
 
+Distribution of political leaning
+```{r}
+ggplot(combined, aes(x = Political_Leaning))+ geom_bar() + scale_x_discrete(name = "Political Leaning", limits = c("0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10")) 
+
+```
+
+Distribution of self transcendence values
+```{r}
+ggplot(combined)+ geom_histogram(mapping = aes(x = SCH_SelfTrancendence), bins = 15) + scale_x_continuous(name = "Self Transcendence")
+
+```
+
 
 ## Confirmatory Factor Analysis (CFA)
 ```{r message=FALSE, warning=FALSE}
@@ -206,7 +218,7 @@ names(positive)[names(positive) == "Q8_1_a"] <- "LP1"
 names(positive)[names(positive) == "Q8_6_a"] <- "GAP3"
 ```
 
-## Measuring convincincness ratings
+## Measuring convincingness ratings
 
 Most convincing among the negative indices
 
@@ -254,6 +266,84 @@ novelsP = novelsP[ , -c(7,14)]
 novelsP[novelsP == 1] <- 0 #not novel
 novelsP[novelsP == 2] <- 1 #novel
 ```
+
+Compare different moral foundations to each other using a paired t-test for the negative indices.
+
+```{r}
+cf = t.test(negative$compassion, negative$fairness, paired = TRUE)
+cp = t.test(negative$compassion, negative$purity, paired = TRUE)
+ca = t.test(negative$compassion, negative$authority, paired = TRUE)
+cl = t.test(negative$compassion, negative$loyalty, paired = TRUE)
+can = t.test(negative$compassion, negative$ancestors, paired = TRUE)
+fp = t.test(negative$fairness, negative$purity, paired = TRUE)
+fa = t.test(negative$fairness, negative$authority, paired = TRUE)
+fl = t.test(negative$fairness, negative$loyalty, paired = TRUE)
+fan = t.test(negative$fairness, negative$ancestors, paired = TRUE)
+pa = t.test(negative$purity, negative$authority, paired = TRUE)
+pl = t.test(negative$purity, negative$loyalty, paired = TRUE)
+pan = t.test(negative$purity, negative$ancestors, paired = TRUE)
+al = t.test(negative$authority, negative$loyalty, paired = TRUE)
+aan = t.test(negative$authority, negative$ancestors, paired = TRUE)
+lan = t.test(negative$loyalty, negative$ancestors, paired = TRUE)
+```
+
+Table below shows only fairness and compassion, authority and loyalty are statistically insignificant, all others have statistically different means.
+
+```{r}
+ncomp = c("x",round(cf$statistic, 2), round(cp$statistic, 2), round(ca$statistic, 2), round(cl$statistic, 2), round(can$statistic, 2))
+nfai = c("x", "x", round(fp$statistic, 2), round(fa$statistic, 2), round(fl$statistic, 2), round(fan$statistic, 2))
+
+npur = c("x", "x", "x", round(pa$statistic, 2), round(pl$statistic, 2), round(pan$statistic, 2))
+
+nauth = c("x", "x", "x", "x", round(al$statistic, 2), round(aan$statistic, 2))
+
+nloy = c("x", "x", "x", "x", "x", round(lan$statistic, 2))
+
+nanc = c("x", "x", "x", "x","x", "x")
+
+data.frame(ncomp, nfai, npur, nauth, nloy, nanc, row.names = c("compassion", "fairness", "purity", "authority", "loyalty", "ancestors"))
+
+```
+
+
+
+For positive statements use the paired Wilcoxon test to compare moral foundation convincingness scores
+```{r}
+pcf = wilcox.test(positive$CP2, positive$FP2, paired = TRUE)
+pcp = wilcox.test(positive$CP2, positive$PP3, paired = TRUE)
+pca = wilcox.test(positive$CP2, positive$AP3, paired = TRUE)
+pcl = wilcox.test(positive$CP2, positive$LP1, paired = TRUE)
+pcan = wilcox.test(positive$CP2, positive$GAP3, paired = TRUE)
+pfp = wilcox.test(positive$FP2, positive$PP3, paired = TRUE)
+pfa = wilcox.test(positive$FP2, positive$AP3, paired = TRUE)
+pfl = wilcox.test(positive$FP2, positive$LP1, paired = TRUE)
+pfan = wilcox.test(positive$FP2, positive$GAP3, paired = TRUE)
+ppa = wilcox.test(positive$PP3, positive$AP3, paired = TRUE)
+ppl = wilcox.test(positive$PP3, positive$LP1, paired = TRUE)
+ppan = wilcox.test(positive$PP3, positive$GAP3, paired = TRUE)
+pal = wilcox.test(positive$AP3, positive$LP1, paired = TRUE)
+paan = wilcox.test(positive$AP3, positive$GAP3, paired = TRUE)
+plan = wilcox.test(positive$LP1, positive$GAP3, paired = TRUE)
+
+```
+
+Only compassion and fairness/purity, authority and loyalty are statistically insignificant. 
+
+```{r}
+pcomp = c("x",round(pcf$statistic, 2), round(pcp$statistic, 2), round(pca$statistic, 2), round(pcl$statistic, 2), round(pcan$statistic, 2))
+pfai = c("x", "x", round(pfp$statistic, 2), round(pfa$statistic, 2), round(pfl$statistic, 2), round(pfan$statistic, 2))
+
+ppur = c("x", "x", "x", round(ppa$statistic, 2), round(ppl$statistic, 2), round(ppan$statistic, 2))
+
+pauth = c("x", "x", "x", "x", round(pal$statistic, 2), round(paan$statistic, 2))
+
+ploy = c("x", "x", "x", "x", "x", round(plan$statistic, 2))
+
+panc = c("x", "x", "x", "x","x", "x")
+
+data.frame(pcomp, pfai, ppur, pauth, ploy, panc, row.names = c("CP2", "FP2", "PP3", "AP3", "LP1", "GAP3"))
+```
+
 
 
 ## Correlations
@@ -352,12 +442,12 @@ corrplot(round(correlations_pos, 2), type = "upper",order = "original",
 
 ## T-tests
 
-Calculate t-tests to compare how different groups were convinced by statements
-
+Calculate 2-sample t-tests to compare how different demographic groups were convinced by statements
 
 Political leaning
 ```{r message=FALSE}
 library(dplyr)
+library(lsr)
 negative = negative %>% 
   mutate(politics = case_when(Political_Leaning < 5 ~ "Left", Political_Leaning >= 5 ~ "Right") )
 
@@ -367,11 +457,17 @@ leftN = subset(negative, politics == "Left")
 rightN = subset(negative, politics == "Right")    
 
 t.test(leftN$compassion, rightN$compassion, var.equal = FALSE)
+cohensD(leftN$compassion, rightN$compassion)
 t.test(leftN$fairness, rightN$fairness, var.equal = FALSE)
+cohensD(leftN$fairness, rightN$fairness)
 t.test(leftN$purity, rightN$purity, var.equal = FALSE)
+cohensD(leftN$purity, rightN$purity)
 t.test(leftN$authority, rightN$authority, var.equal = FALSE)
+cohensD(leftN$authority, rightN$authority)
 t.test(leftN$loyalty, rightN$loyalty, var.equal = FALSE)
+cohensD(leftN$loyalty, rightN$loyalty)
 t.test(leftN$ancestors, rightN$ancestors, var.equal = FALSE)
+cohensD(leftN$ancestors, rightN$ancestors)
 ```
 
 Signifiant p-values so can visualise in a boxplot
@@ -382,6 +478,7 @@ neg_melt = melt(negative, measure.vars = c("compassion", "fairness", "purity", "
 ggplot(neg_melt, aes(x = variable, y = value, fill = politics)) + geom_boxplot() + xlab("Moral Category") + ylab("Convincing") + scale_y_continuous(breaks = c(1,2,3,4,5,6))
 
 ```
+
 
 Repeat for positive statements but they are all insignificant
 ```{r}
@@ -401,11 +498,17 @@ rightP = subset(positive, politics == "Right")
 
 #insignificant
 t.test(leftP$CP2, rightP$CP2, var.equal = FALSE)
+cohensD(leftP$CP2, rightP$CP2)
 t.test(leftP$FP2, rightP$FP2, var.equal = FALSE)
+cohensD(leftP$FP2, rightP$FP2)
 t.test(leftP$PP3, rightP$PP3, var.equal = FALSE)
+cohensD(leftP$PP3, rightP$PP3)
 t.test(leftP$AP3, rightP$AP3, var.equal = FALSE)
+cohensD(leftP$AP3, rightP$AP3)
 t.test(leftP$LP1, rightP$LP1, var.equal = FALSE)
+cohensD(leftP$LP1, rightP$LP1)
 t.test(leftP$GAP3, rightP$GAP3, var.equal = FALSE)
+cohensD(leftP$GAP3, rightP$GAP3)
 
 ```
 
@@ -413,6 +516,7 @@ Academic background
 
 ```{r}
 #negative
+library(lsr)
 negative = negative %>% 
   mutate(academics = case_when(Q15 < 5 ~ "non-academic", Q15 >= 5 ~ "academic") )
 
@@ -423,11 +527,17 @@ nonaca = subset(negative, academics == "non-academic")
 
 #non signif
 t.test(aca$compassion, nonaca$compassion, var.equal = FALSE)
+cohensD(aca$compassion, nonaca$compassion)
 t.test(aca$fairness, nonaca$fairness, var.equal = FALSE)
+cohensD(aca$fairness, nonaca$fairness)
 t.test(aca$purity, nonaca$purity, var.equal = FALSE)
+cohensD(aca$purity, nonaca$purity)
 t.test(aca$authority, nonaca$authority, var.equal = FALSE)
+cohensD(aca$authority, nonaca$authority)
 t.test(aca$loyalty, nonaca$loyalty, var.equal = FALSE)
+cohensD(aca$loyalty, nonaca$loyalty)
 t.test(aca$ancestors, nonaca$ancestors, var.equal = FALSE)
+cohensD(aca$ancestors, nonaca$ancestors)
 
 ```
 
@@ -443,11 +553,17 @@ acaP = subset(positive, academics == "academic")
 nonacaP = subset(positive, academics == "non-academic")   
 #insignificant
 t.test(acaP$CP2, nonacaP$CP2, var.equal = FALSE)
+cohensD(acaP$CP2, nonacaP$CP2)
 t.test(acaP$FP2, nonacaP$FP2, var.equal = FALSE)
+cohensD(acaP$FP2, nonacaP$FP2)
 t.test(acaP$PP3, nonacaP$PP3, var.equal = FALSE)
+cohensD(acaP$PP3, nonacaP$PP3)
 t.test(acaP$AP3, nonacaP$AP3, var.equal = FALSE)
+cohensD(acaP$AP3, nonacaP$AP3)
 t.test(acaP$LP1, nonacaP$LP1, var.equal = FALSE)
+cohensD(acaP$LP1, nonacaP$LP1)
 t.test(acaP$GAP3, nonacaP$GAP3, var.equal = FALSE)
+cohensD(acaP$GAP3, nonacaP$GAP3)
 ```
 
 
@@ -464,6 +580,7 @@ relig = subset(negative, religion == "religious")
 nonrelig = subset(negative, religion == "non-religious")   
 #religious statement
 t.test(relig$Q7_1_a, nonrelig$Q7_1_a, var.equal = FALSE)
+cohensD(relig$Q7_1_a, nonrelig$Q7_1_a)
 ```
 
 And repeat for positive
@@ -480,5 +597,6 @@ nonreligP = subset(positive, religion == "non-religious")
 
 #religious statement
 t.test(religP$Q7_2_a, nonreligP$Q7_2_a, var.equal = FALSE)
+cohensD(religP$Q7_2_a, nonreligP$Q7_2_a)
 ```
 
