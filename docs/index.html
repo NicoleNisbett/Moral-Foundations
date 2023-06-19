@@ -1084,21 +1084,52 @@ novelsP[novelsP == 1] &lt;- 0 #not novel
 novelsP[novelsP == 2] &lt;- 1 #novel</code></pre>
 <p>Compare different moral foundations to each other using a paired
 t-test for the negative indices.</p>
-<pre class="r"><code>cf = t.test(negative$compassion, negative$fairness, paired = TRUE)
-cp = t.test(negative$compassion, negative$purity, paired = TRUE)
-ca = t.test(negative$compassion, negative$authority, paired = TRUE)
-cl = t.test(negative$compassion, negative$loyalty, paired = TRUE)
-can = t.test(negative$compassion, negative$ancestors, paired = TRUE)
-fp = t.test(negative$fairness, negative$purity, paired = TRUE)
-fa = t.test(negative$fairness, negative$authority, paired = TRUE)
-fl = t.test(negative$fairness, negative$loyalty, paired = TRUE)
-fan = t.test(negative$fairness, negative$ancestors, paired = TRUE)
-pa = t.test(negative$purity, negative$authority, paired = TRUE)
-pl = t.test(negative$purity, negative$loyalty, paired = TRUE)
-pan = t.test(negative$purity, negative$ancestors, paired = TRUE)
-al = t.test(negative$authority, negative$loyalty, paired = TRUE)
-aan = t.test(negative$authority, negative$ancestors, paired = TRUE)
-lan = t.test(negative$loyalty, negative$ancestors, paired = TRUE)</code></pre>
+<pre class="r"><code>library(lsr)
+cf = t.test(negative$compassion, negative$fairness, paired = TRUE)
+round(cohensD(negative$compassion, negative$fairness),2)</code></pre>
+<pre><code>## [1] 0.03</code></pre>
+<pre class="r"><code>cp = t.test(negative$compassion, negative$purity, paired = TRUE)
+round(cohensD(negative$compassion, negative$purity),2)</code></pre>
+<pre><code>## [1] 0.17</code></pre>
+<pre class="r"><code>ca = t.test(negative$compassion, negative$authority, paired = TRUE)
+round(cohensD(negative$compassion, negative$authority),2)</code></pre>
+<pre><code>## [1] 0.6</code></pre>
+<pre class="r"><code>cl = t.test(negative$compassion, negative$loyalty, paired = TRUE)
+round(cohensD(negative$compassion, negative$loyalty),2)</code></pre>
+<pre><code>## [1] 0.61</code></pre>
+<pre class="r"><code>can = t.test(negative$compassion, negative$ancestors, paired = TRUE)
+round(cohensD(negative$compassion, negative$ancestors),2)</code></pre>
+<pre><code>## [1] 0.36</code></pre>
+<pre class="r"><code>fp = t.test(negative$fairness, negative$purity, paired = TRUE)
+round(cohensD(negative$fairness, negative$purity),2)</code></pre>
+<pre><code>## [1] 0.19</code></pre>
+<pre class="r"><code>fa = t.test(negative$fairness, negative$authority, paired = TRUE)
+round(cohensD(negative$fairness, negative$authority),2)</code></pre>
+<pre><code>## [1] 0.6</code></pre>
+<pre class="r"><code>fl = t.test(negative$fairness, negative$loyalty, paired = TRUE)
+round(cohensD(negative$fairness, negative$loyalty),2)</code></pre>
+<pre><code>## [1] 0.61</code></pre>
+<pre class="r"><code>fan = t.test(negative$fairness, negative$ancestors, paired = TRUE)
+round(cohensD(negative$fairness, negative$ancestors),2)</code></pre>
+<pre><code>## [1] 0.37</code></pre>
+<pre class="r"><code>pa = t.test(negative$purity, negative$authority, paired = TRUE)
+round(cohensD(negative$purity, negative$authority),2)</code></pre>
+<pre><code>## [1] 0.42</code></pre>
+<pre class="r"><code>pl = t.test(negative$purity, negative$loyalty, paired = TRUE)
+round(cohensD(negative$purity, negative$loyalty),2)</code></pre>
+<pre><code>## [1] 0.42</code></pre>
+<pre class="r"><code>pan = t.test(negative$purity, negative$ancestors, paired = TRUE)
+round(cohensD(negative$purity, negative$ancestors),2)</code></pre>
+<pre><code>## [1] 0.19</code></pre>
+<pre class="r"><code>al = t.test(negative$authority, negative$loyalty, paired = TRUE)
+round(cohensD(negative$authority, negative$loyalty),2)</code></pre>
+<pre><code>## [1] 0.03</code></pre>
+<pre class="r"><code>aan = t.test(negative$authority, negative$ancestors, paired = TRUE)
+round(cohensD(negative$authority, negative$ancestors),2)</code></pre>
+<pre><code>## [1] 0.21</code></pre>
+<pre class="r"><code>lan = t.test(negative$loyalty, negative$ancestors, paired = TRUE)
+round(cohensD(negative$loyalty, negative$ancestors),2)</code></pre>
+<pre><code>## [1] 0.19</code></pre>
 <p>Table below shows only fairness and compassion, authority and loyalty
 are statistically insignificant, all others have statistically different
 means.</p>
@@ -1124,20 +1155,50 @@ data.frame(ncomp, nfai, npur, nauth, nloy, nanc, row.names = c(&quot;compassion&
 <p>For positive statements use the paired Wilcoxon test to compare moral
 foundation convincingness scores</p>
 <pre class="r"><code>pcf = wilcox.test(positive$CP2, positive$FP2, paired = TRUE)
-pcp = wilcox.test(positive$CP2, positive$PP3, paired = TRUE)
-pca = wilcox.test(positive$CP2, positive$AP3, paired = TRUE)
-pcl = wilcox.test(positive$CP2, positive$LP1, paired = TRUE)
-pcan = wilcox.test(positive$CP2, positive$GAP3, paired = TRUE)
-pfp = wilcox.test(positive$FP2, positive$PP3, paired = TRUE)
-pfa = wilcox.test(positive$FP2, positive$AP3, paired = TRUE)
-pfl = wilcox.test(positive$FP2, positive$LP1, paired = TRUE)
-pfan = wilcox.test(positive$FP2, positive$GAP3, paired = TRUE)
-ppa = wilcox.test(positive$PP3, positive$AP3, paired = TRUE)
-ppl = wilcox.test(positive$PP3, positive$LP1, paired = TRUE)
-ppan = wilcox.test(positive$PP3, positive$GAP3, paired = TRUE)
-pal = wilcox.test(positive$AP3, positive$LP1, paired = TRUE)
-paan = wilcox.test(positive$AP3, positive$GAP3, paired = TRUE)
-plan = wilcox.test(positive$LP1, positive$GAP3, paired = TRUE)</code></pre>
+round(cohensD(positive$CP2, positive$FP2),2)</code></pre>
+<pre><code>## [1] 0.11</code></pre>
+<pre class="r"><code>pcp = wilcox.test(positive$CP2, positive$PP3, paired = TRUE)
+round(cohensD(positive$CP2, positive$PP3),2)</code></pre>
+<pre><code>## [1] 0.19</code></pre>
+<pre class="r"><code>pca = wilcox.test(positive$CP2, positive$AP3, paired = TRUE)
+round(cohensD(positive$CP2, positive$AP3),2)</code></pre>
+<pre><code>## [1] 0.33</code></pre>
+<pre class="r"><code>pcl = wilcox.test(positive$CP2, positive$LP1, paired = TRUE)
+round(cohensD(positive$CP2, positive$LP1),2)</code></pre>
+<pre><code>## [1] 0.25</code></pre>
+<pre class="r"><code>pcan = wilcox.test(positive$CP2, positive$GAP3, paired = TRUE)
+round(cohensD(positive$CP2, positive$GAP3),2)</code></pre>
+<pre><code>## [1] 0.43</code></pre>
+<pre class="r"><code>pfp = wilcox.test(positive$FP2, positive$PP3, paired = TRUE)
+round(cohensD(positive$FP2, positive$PP3),2)</code></pre>
+<pre><code>## [1] 0.31</code></pre>
+<pre class="r"><code>pfa = wilcox.test(positive$FP2, positive$AP3, paired = TRUE)
+round(cohensD(positive$FP2, positive$AP3),2)</code></pre>
+<pre><code>## [1] 0.23</code></pre>
+<pre class="r"><code>pfl = wilcox.test(positive$FP2, positive$LP1, paired = TRUE)
+round(cohensD(positive$FP2, positive$LP1),2)</code></pre>
+<pre><code>## [1] 0.14</code></pre>
+<pre class="r"><code>pfan = wilcox.test(positive$FP2, positive$GAP3, paired = TRUE)
+round(cohensD(positive$FP2, positive$GAP3),2)</code></pre>
+<pre><code>## [1] 0.55</code></pre>
+<pre class="r"><code>ppa = wilcox.test(positive$PP3, positive$AP3, paired = TRUE)
+round(cohensD(positive$PP3, positive$AP3),2)</code></pre>
+<pre><code>## [1] 0.56</code></pre>
+<pre class="r"><code>ppl = wilcox.test(positive$PP3, positive$LP1, paired = TRUE)
+round(cohensD(positive$PP3, positive$LP1),2)</code></pre>
+<pre><code>## [1] 0.48</code></pre>
+<pre class="r"><code>ppan = wilcox.test(positive$PP3, positive$GAP3, paired = TRUE)
+round(cohensD(positive$PP3, positive$GAP3),2)</code></pre>
+<pre><code>## [1] 0.27</code></pre>
+<pre class="r"><code>pal = wilcox.test(positive$AP3, positive$LP1, paired = TRUE)
+round(cohensD(positive$AP3, positive$LP1),2)</code></pre>
+<pre><code>## [1] 0.09</code></pre>
+<pre class="r"><code>paan = wilcox.test(positive$AP3, positive$GAP3, paired = TRUE)
+round(cohensD(positive$AP3, positive$GAP3),2)</code></pre>
+<pre><code>## [1] 0.81</code></pre>
+<pre class="r"><code>plan = wilcox.test(positive$LP1, positive$GAP3, paired = TRUE)
+round(cohensD(positive$LP1, positive$GAP3),2)</code></pre>
+<pre><code>## [1] 0.73</code></pre>
 <p>Only compassion and fairness/purity, authority and loyalty are
 statistically insignificant.</p>
 <pre class="r"><code>pcomp = c(&quot;x&quot;,round(pcf$statistic, 2), round(pcp$statistic, 2), round(pca$statistic, 2), round(pcl$statistic, 2), round(pcan$statistic, 2))

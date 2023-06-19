@@ -275,21 +275,52 @@ novelsP[novelsP == 2] <- 1 #novel
 Compare different moral foundations to each other using a paired t-test for the negative indices.
 
 ```{r}
+library(lsr)
 cf = t.test(negative$compassion, negative$fairness, paired = TRUE)
+round(cohensD(negative$compassion, negative$fairness),2)
+
 cp = t.test(negative$compassion, negative$purity, paired = TRUE)
+round(cohensD(negative$compassion, negative$purity),2)
+
 ca = t.test(negative$compassion, negative$authority, paired = TRUE)
+round(cohensD(negative$compassion, negative$authority),2)
+
 cl = t.test(negative$compassion, negative$loyalty, paired = TRUE)
+round(cohensD(negative$compassion, negative$loyalty),2)
+
 can = t.test(negative$compassion, negative$ancestors, paired = TRUE)
+round(cohensD(negative$compassion, negative$ancestors),2)
+
 fp = t.test(negative$fairness, negative$purity, paired = TRUE)
+round(cohensD(negative$fairness, negative$purity),2)
+
 fa = t.test(negative$fairness, negative$authority, paired = TRUE)
+round(cohensD(negative$fairness, negative$authority),2)
+
 fl = t.test(negative$fairness, negative$loyalty, paired = TRUE)
+round(cohensD(negative$fairness, negative$loyalty),2)
+
 fan = t.test(negative$fairness, negative$ancestors, paired = TRUE)
+round(cohensD(negative$fairness, negative$ancestors),2)
+
 pa = t.test(negative$purity, negative$authority, paired = TRUE)
+round(cohensD(negative$purity, negative$authority),2)
+
 pl = t.test(negative$purity, negative$loyalty, paired = TRUE)
+round(cohensD(negative$purity, negative$loyalty),2)
+
 pan = t.test(negative$purity, negative$ancestors, paired = TRUE)
+round(cohensD(negative$purity, negative$ancestors),2)
+
 al = t.test(negative$authority, negative$loyalty, paired = TRUE)
+round(cohensD(negative$authority, negative$loyalty),2)
+
 aan = t.test(negative$authority, negative$ancestors, paired = TRUE)
+round(cohensD(negative$authority, negative$ancestors),2)
+
 lan = t.test(negative$loyalty, negative$ancestors, paired = TRUE)
+round(cohensD(negative$loyalty, negative$ancestors),2)
+
 ```
 
 Table below shows only fairness and compassion, authority and loyalty are statistically insignificant, all others have statistically different means.
@@ -315,20 +346,50 @@ data.frame(ncomp, nfai, npur, nauth, nloy, nanc, row.names = c("compassion", "fa
 For positive statements use the paired Wilcoxon test to compare moral foundation convincingness scores
 ```{r}
 pcf = wilcox.test(positive$CP2, positive$FP2, paired = TRUE)
+round(cohensD(positive$CP2, positive$FP2),2)
+
 pcp = wilcox.test(positive$CP2, positive$PP3, paired = TRUE)
+round(cohensD(positive$CP2, positive$PP3),2)
+
 pca = wilcox.test(positive$CP2, positive$AP3, paired = TRUE)
+round(cohensD(positive$CP2, positive$AP3),2)
+
 pcl = wilcox.test(positive$CP2, positive$LP1, paired = TRUE)
+round(cohensD(positive$CP2, positive$LP1),2)
+
 pcan = wilcox.test(positive$CP2, positive$GAP3, paired = TRUE)
+round(cohensD(positive$CP2, positive$GAP3),2)
+
 pfp = wilcox.test(positive$FP2, positive$PP3, paired = TRUE)
+round(cohensD(positive$FP2, positive$PP3),2)
+
 pfa = wilcox.test(positive$FP2, positive$AP3, paired = TRUE)
+round(cohensD(positive$FP2, positive$AP3),2)
+
 pfl = wilcox.test(positive$FP2, positive$LP1, paired = TRUE)
+round(cohensD(positive$FP2, positive$LP1),2)
+
 pfan = wilcox.test(positive$FP2, positive$GAP3, paired = TRUE)
+round(cohensD(positive$FP2, positive$GAP3),2)
+
 ppa = wilcox.test(positive$PP3, positive$AP3, paired = TRUE)
+round(cohensD(positive$PP3, positive$AP3),2)
+
 ppl = wilcox.test(positive$PP3, positive$LP1, paired = TRUE)
+round(cohensD(positive$PP3, positive$LP1),2)
+
 ppan = wilcox.test(positive$PP3, positive$GAP3, paired = TRUE)
+round(cohensD(positive$PP3, positive$GAP3),2)
+
 pal = wilcox.test(positive$AP3, positive$LP1, paired = TRUE)
+round(cohensD(positive$AP3, positive$LP1),2)
+
 paan = wilcox.test(positive$AP3, positive$GAP3, paired = TRUE)
+round(cohensD(positive$AP3, positive$GAP3),2)
+
 plan = wilcox.test(positive$LP1, positive$GAP3, paired = TRUE)
+round(cohensD(positive$LP1, positive$GAP3),2)
+
 
 ```
 
